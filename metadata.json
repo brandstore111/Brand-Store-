@@ -1,0 +1,8 @@
+{
+  "name": "Brand Store - FinTech & Marketplace",
+  "description": "A comprehensive multi-service digital platform for mobile recharge, bill payments, digital wallets, and mobile accessories marketplace.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
