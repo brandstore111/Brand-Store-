@@ -1,7 +1,9 @@
 
+
 export type UserType = 'CUSTOMER' | 'MERCHANT' | 'ADMIN';
 export type UserStatus = 'PENDING' | 'ACTIVE' | 'BLOCKED';
 
+// Fix: added password property to User interface to support authentication logic in api.ts
 export interface User {
   id: string;
   fullName: string;
@@ -15,6 +17,7 @@ export interface User {
   idFront?: string;
   idBack?: string;
   personalPhoto?: string;
+  password?: string;
 }
 
 export interface Product {

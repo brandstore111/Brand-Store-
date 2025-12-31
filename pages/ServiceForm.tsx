@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Smartphone, CheckCircle2, AlertCircle, Send, Loader2, ReceiptText } from 'lucide-react';
+import { ArrowRight, Smartphone, CheckCircle2, AlertCircle, Send, Loader2, ReceiptText, TrendingDown } from 'lucide-react';
 import { SERVICES_LIST } from '../constants';
 import { api } from '../api';
 import { useAppContext } from '../context/AppContext';
@@ -9,7 +9,7 @@ import { useAppContext } from '../context/AppContext';
 const ServiceForm: React.FC = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { updateBalance } = useAppContext();
+  const { updateBalance, user } = useAppContext();
   const service = SERVICES_LIST.find(s => s.id === serviceId);
 
   const [step, setStep] = useState<'FORM' | 'CONFIRM' | 'SUCCESS' | 'ERROR'>('FORM');
@@ -33,12 +33,12 @@ const ServiceForm: React.FC = () => {
   const handleProcess = async () => {
     setLoading(true);
     try {
+      // تم إزالة شرط (amount > userBalance) للسماح بالمديونية
       const result = await api.payment.process({
         amount: parseFloat(formData.amount),
-        method: 'WALLET',
-        description: `${service?.name} للرقم ${formData.number}`,
+        description: `شحن ${service?.name} للرقم ${formData.number}`,
         target: formData.number,
-        type: 'PAYMENT'
+        type: 'RECHARGE'
       });
 
       if (result.success) {
@@ -101,6 +101,7 @@ const ServiceForm: React.FC = () => {
                     onChange={e => setFormData({...formData, amount: e.target.value})}
                   />
                 </div>
+                <p className="text-[10px] text-gray-400 mt-1 mr-2 font-bold italic">سيتم خصم المبلغ من رصيد المحفظة أو تسجيله كمديونية</p>
               </div>
             </div>
 
@@ -115,7 +116,7 @@ const ServiceForm: React.FC = () => {
 
         {step === 'CONFIRM' && (
           <div className="p-8 space-y-6">
-            <h2 className="text-2xl font-black text-center text-gray-800">تأكيد العملية</h2>
+            <h2 className="text-2xl font-black text-center text-gray-800">تأكيد تسجيل المديونية</h2>
             <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 font-bold">الخدمة</span>
@@ -126,8 +127,8 @@ const ServiceForm: React.FC = () => {
                 <span className="font-black text-gray-800">{formData.number}</span>
               </div>
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                <span className="text-gray-500 font-black text-lg">المبلغ الإجمالي</span>
-                <span className="font-black text-2xl text-blue-600">{formData.amount} ج.م</span>
+                <span className="text-gray-500 font-black text-lg">المبلغ للخصم</span>
+                <span className="font-black text-2xl text-red-600">{formData.amount} ج.م</span>
               </div>
             </div>
 
@@ -153,7 +154,7 @@ const ServiceForm: React.FC = () => {
                 onClick={handleProcess}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="animate-spin" /> : 'تأكيد ودفع'}
+                {loading ? <Loader2 className="animate-spin" /> : 'تأكيد العملية'}
               </button>
             </div>
           </div>
@@ -165,13 +166,17 @@ const ServiceForm: React.FC = () => {
               <CheckCircle2 size={60} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-gray-800 mb-2">تمت العملية بنجاح!</h2>
+              <h2 className="text-3xl font-black text-gray-800 mb-2">تم التنفيذ بنجاح!</h2>
               <p className="text-gray-500 font-bold">{response?.message}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-3xl text-sm space-y-2">
               <p className="flex justify-between"><span>رقم العملية:</span> <span className="font-black text-blue-600">#{response?.transactionId}</span></p>
-              <p className="flex justify-between"><span>الرصيد المتبقي:</span> <span className="font-black">{response?.newBalance?.toLocaleString()} ج.م</span></p>
-              <p className="flex justify-between"><span>التاريخ:</span> <span className="font-black">{new Date().toLocaleString('ar-EG')}</span></p>
+              <p className="flex justify-between">
+                <span>حالة الحساب حالياً:</span> 
+                <span className={`font-black ${response?.newBalance < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                   {response?.newBalance < 0 ? `مديونية: ${Math.abs(response?.newBalance)}` : `رصيد: ${response?.newBalance}`} ج.م
+                </span>
+              </p>
             </div>
             <button 
               onClick={() => navigate('/dashboard')}
@@ -179,22 +184,6 @@ const ServiceForm: React.FC = () => {
             >
                العودة للرئيسية <ReceiptText size={20} />
             </button>
-          </div>
-        )}
-
-        {step === 'ERROR' && (
-          <div className="p-12 text-center space-y-6">
-            <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle size={60} />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-gray-800 mb-2">فشلت العملية</h2>
-              <p className="text-gray-500 font-bold">{response?.message || 'لم نتمكن من إتمام العملية حالياً. يرجى مراجعة الرصيد أو المحاولة مرة أخرى.'}</p>
-            </div>
-            <button 
-              onClick={() => setStep('FORM')}
-              className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl transition-all"
-            >المحاولة مرة أخرى</button>
           </div>
         )}
       </div>

@@ -10,6 +10,7 @@ import Marketplace from './pages/Marketplace';
 import ServiceForm from './pages/ServiceForm';
 import AdminDashboard from './pages/AdminDashboard';
 import MerchantDashboard from './pages/MerchantDashboard';
+import Settings from './pages/Settings';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, roles?: string[] }> = ({ children, roles }) => {
   const { user } = useAppContext();
@@ -23,34 +24,15 @@ const App: React.FC = () => {
     <AppProvider>
       <Router>
         <Routes>
-          {/* المدخل الأساسي للموقع */}
           <Route path="/" element={<Landing />} />
-          
           <Route path="/auth" element={<Auth />} />
-          
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          
-          <Route path="/marketplace" element={
-            <ProtectedRoute><Marketplace /></ProtectedRoute>
-          } />
-
-          <Route path="/service/:serviceId" element={
-            <ProtectedRoute><ServiceForm /></ProtectedRoute>
-          } />
-
-          <Route path="/admin" element={
-            <ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>
-          } />
-
-          <Route path="/merchant" element={
-            <ProtectedRoute roles={['MERCHANT', 'ADMIN']}><MerchantDashboard /></ProtectedRoute>
-          } />
-
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+          <Route path="/service/:serviceId" element={<ProtectedRoute><ServiceForm /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/merchant" element={<ProtectedRoute roles={['MERCHANT', 'ADMIN']}><MerchantDashboard /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-
-          {/* إعادة التوجيه للرئيسية في حال عدم وجود المسار */}
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
